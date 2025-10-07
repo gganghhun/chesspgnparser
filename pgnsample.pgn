@@ -1,0 +1,21 @@
+[Event "rated classical game"]
+[Site "https://lichess.org/sZ9FSDgB"]
+[Date "2025.09.20"]
+[White "xtremecase"]
+[Black "Alexander_Abramov"]
+[Result "0-1"]
+[GameId "sZ9FSDgB"]
+[UTCDate "2025.09.20"]
+[UTCTime "10:46:09"]
+[WhiteElo "2226"]
+[BlackElo "2638"]
+[WhiteRatingDiff "-2"]
+[BlackRatingDiff "+4"]
+[Variant "Standard"]
+[TimeControl "2700+180"]
+[ECO "D32"]
+[Opening "Tarrasch Defense: Symmetrical Variation"]
+[Termination "Normal"]
+
+1. d4 Nf6 2. Nf3 e6 3. c4 c5 4. e3 d5 5. Nc3 Nc6 6. Be2 dxc4 7. Bxc4 cxd4 8. exd4 Bd6 9. Be3 O-O 10. O-O a6 11. a4 Nb4 12. Qb3 b6 13. Rfd1 Bb7 14. Ne5 Qe7 15. Bg5 Rac8 16. Ng4 Qc7 17. Be2 Nxg4 18. Bxg4 Bxh2+ 19. Kh1 Bd6 20. d5 f5 21. dxe6 fxg4 22. e7+ Rf7 23. Qe6 Bxe7 24. Rd7 Qc6 25. Qxc6 Nxc6 26. Rxb7 Bxg5 27. Rxb6 a5 28. Ne4 Be7 29. Rc1 Na7 30. Rxc8+ Nxc8 31. Rb8 Rf8 32. Rb5 Bb4 33. Rg5 Rf4 34. Re5 Nd6 35. Nxd6 Bxd6 36. Rxa5 Rxf2 37. Kg1 g3 38. Rb5 Bf4 39. Rb3 Bc7 40. Rb7 Be5 41. Rb4 Bxb2 42. a5 Bc3 43. Ra4 Re2 44. Rf4 Re1+ 45. Rf1 Bd4+ 0-1
+
