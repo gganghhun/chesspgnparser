@@ -138,7 +138,7 @@ public:
 int main()
 {
 	// std::string pgn_cutted_header = cutting_header("chessfeachermaking/pgnsample.pgn");
-    std::ifstream file_stream("pgnparser/pgnsample.pgn");
+    std::ifstream file_stream("pgnsample.pgn");
 	MyVisitor myvisitor;
 	myvisitor.feacher_vector.reserve(BUFFER_SIZE);
 	pgn::StreamParser parser(file_stream);
