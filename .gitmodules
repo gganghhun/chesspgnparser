@@ -1,0 +1,3 @@
+[submodule "chesspgnparser"]
+	path = chesspgnparser
+	url = https://github.com/Disservin/chess-library.git
