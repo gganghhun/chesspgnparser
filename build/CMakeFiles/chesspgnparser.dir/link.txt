@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/chesspgnparser.dir/pgndataparer.cpp.o -o chesspgnparser 

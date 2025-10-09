@@ -10,24 +10,92 @@
 #include <unordered_map>
 #include <array>
 #include <limits>
+#include <zstd.h>
+#include <cstdlib>
+#include <sstream>
 using namespace chess;
 
-int fast_convert_view_to_int(std::string_view sv) {
-    int value;
-    
-    // ⭐️ sv가 참조하는 데이터의 시작 주소와 끝 주소를 전달
-    auto [ptr, ec] = std::from_chars(sv.data(), 
-                                      sv.data() + sv.size(), 
-                                      value);
-	std::cout << value << std::endl; 
-	return value;
-    // ec(error code)를 확인하여 변환 성공 여부 판단
-    // if (ec == std::errc{}) {
-    //     std::cout << "빠르게 변환된 값: " << value << std::endl;
-    // } else {
-    //     std::cerr << "변환 실패 (std::from_chars)" << std::endl;
-    // }
-}
+class ZstdDecompressingStreamBuf : public std::streambuf {
+public:
+    // 생성자: 압축된 파일 스트림을 받습니다.
+    ZstdDecompressingStreamBuf(std::istream& source)
+        : source_(source) {
+        
+        // ZSTD 스트림 초기화
+        dstream_ = ZSTD_createDStream();
+        ZSTD_initDStream(dstream_);
+
+        // 입출력 버퍼 할당 (RAII를 위해 vector 사용)
+        in_buffer_.resize(ZSTD_DStreamInSize());
+        out_buffer_.resize(ZSTD_DStreamOutSize());
+
+        // streambuf의 get 포인터 초기화 (버퍼가 비어있음을 의미)
+        setg(nullptr, nullptr, nullptr);
+    }
+
+    // 소멸자: ZSTD 리소스 해제
+    ~ZstdDecompressingStreamBuf() {
+        ZSTD_freeDStream(dstream_);
+    }
+
+protected:
+    // underflow()는 streambuf의 핵심입니다.
+    // istream이 데이터를 다 읽어서 버퍼가 비었을 때 자동으로 호출됩니다.
+    int_type underflow() override {
+        // 현재 버퍼에 읽을 데이터가 남아있으면 즉시 반환 (일어날 확률 낮음)
+        if (gptr() < egptr()) {
+            return traits_type::to_int_type(*gptr());
+        }
+
+        // 압축 해제된 데이터를 담을 출력 버퍼 설정
+        ZSTD_outBuffer out_zstd_buffer = { out_buffer_.data(), out_buffer_.size(), 0 };
+
+        // 출력 버퍼가 채워지거나, 입력 파일이 끝날 때까지 반복
+        while (out_zstd_buffer.pos < out_zstd_buffer.size) {
+            // ZSTD 입력 버퍼에 남은 데이터가 없으면 파일에서 더 읽어온다.
+            if (in_zstd_buffer_.pos >= in_zstd_buffer_.size) {
+                source_.read(in_buffer_.data(), in_buffer_.size());
+                size_t read_bytes = source_.gcount();
+                if (read_bytes == 0) {
+                    break; // 파일 끝
+                }
+                in_zstd_buffer_ = { in_buffer_.data(), read_bytes, 0 };
+            }
+
+            // 스트림 압축 해제
+            size_t const ret = ZSTD_decompressStream(dstream_, &out_zstd_buffer, &in_zstd_buffer_);
+            if (ZSTD_isError(ret)) {
+                // 에러 처리
+                setg(nullptr, nullptr, nullptr);
+                return traits_type::eof();
+            }
+
+            // ZSTD가 압축 해제를 완료했고, 더 이상 출력할 데이터가 없으면 종료
+            if (ret == 0) {
+                break;
+            }
+        }
+
+        // 압축 해제된 데이터가 조금이라도 있다면
+        if (out_zstd_buffer.pos > 0) {
+            // streambuf의 "get area"를 새로 채워진 출력 버퍼로 설정
+            setg(out_buffer_.data(), out_buffer_.data(), out_buffer_.data() + out_zstd_buffer.pos);
+            // 새로 채워진 데이터의 첫 번째 문자를 반환
+            return traits_type::to_int_type(*gptr());
+        }
+
+        // 파일 끝이고 더 이상 압축 해제할 데이터가 없으면 EOF 반환
+        return traits_type::eof();
+    }
+
+private:
+    std::istream&       source_;
+    ZSTD_DStream* dstream_;
+    std::vector<char>   in_buffer_;
+    std::vector<char>   out_buffer_;
+    ZSTD_inBuffer       in_zstd_buffer_ = { nullptr, 0, 0 };
+};
+
 const std::unordered_map<std::string_view, int> pgn_resultpoints = {
 	{"1-0", 1},
 	{"1/2-1/2", 0},
@@ -49,6 +117,8 @@ struct TrainingEntry {
     void add(std::uint16_t feature_id);
     void remove(std::uint16_t feature_id);
 };
+
+int fast_convert_view_to_int(std::string_view sv);
 void save_buffer_to_binary_file(const std::string& filepath, const std::vector<TrainingEntry>& buffer);
 std::uint16_t make_featureindex(const Board& board,Square king_square, Square piece_square);
 void make_feacher(Board board, TrainingEntry& entry);
@@ -138,11 +208,21 @@ public:
 int main()
 {
 	// std::string pgn_cutted_header = cutting_header("chessfeachermaking/pgnsample.pgn");
-    std::ifstream file_stream("pgnsample.pgn");
+    // std::ifstream file_stream("pgnsample.pgn");
+	std::string input_path = "pgnsample.pgn.zst";
+	std::ifstream inputFile(input_path, std::ios::binary);
+    if (!inputFile) {
+        std::cerr << "Error: Cannot open input file " << input_path << std::endl;
+        return -1;
+    }
+	ZstdDecompressingStreamBuf zstdBuf(inputFile);
+	std::istream file_stream2(&zstdBuf);
+
+
+
 	MyVisitor myvisitor;
 	myvisitor.feacher_vector.reserve(BUFFER_SIZE);
-	pgn::StreamParser parser(file_stream);
-	std::cout << "sssx";
+	pgn::StreamParser parser(file_stream2);
 	auto error = parser.readGames(myvisitor);
     if (error) {
         std::cerr << "Error parsing PGN: " << error.message() << std::endl;
@@ -285,4 +365,20 @@ void save_buffer_to_binary_file(const std::string& filepath, const std::vector<T
     );
 
     file.close();
+}
+int fast_convert_view_to_int(std::string_view sv) {
+    int value;
+    
+    // ⭐️ sv가 참조하는 데이터의 시작 주소와 끝 주소를 전달
+    auto [ptr, ec] = std::from_chars(sv.data(), 
+                                      sv.data() + sv.size(), 
+                                      value);
+	std::cout << value << std::endl; 
+	return value;
+    // ec(error code)를 확인하여 변환 성공 여부 판단
+    // if (ec == std::errc{}) {
+    //     std::cout << "빠르게 변환된 값: " << value << std::endl;
+    // } else {
+    //     std::cerr << "변환 실패 (std::from_chars)" << std::endl;
+    // }
 }
