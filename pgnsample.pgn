@@ -7,7 +7,7 @@
 [GameId "sZ9FSDgB"]
 [UTCDate "2025.09.20"]
 [UTCTime "10:46:09"]
-[WhiteElo "2226"]
+[WhiteElo "2326"]
 [BlackElo "2638"]
 [WhiteRatingDiff "-2"]
 [BlackRatingDiff "+4"]
@@ -18,4 +18,24 @@
 [Termination "Normal"]
 
 1. d4 Nf6 2. Nf3 e6 3. c4 c5 4. e3 d5 5. Nc3 Nc6 6. Be2 dxc4 7. Bxc4 cxd4 8. exd4 Bd6 9. Be3 O-O 10. O-O a6 11. a4 Nb4 12. Qb3 b6 13. Rfd1 Bb7 14. Ne5 Qe7 15. Bg5 Rac8 16. Ng4 Qc7 17. Be2 Nxg4 18. Bxg4 Bxh2+ 19. Kh1 Bd6 20. d5 f5 21. dxe6 fxg4 22. e7+ Rf7 23. Qe6 Bxe7 24. Rd7 Qc6 25. Qxc6 Nxc6 26. Rxb7 Bxg5 27. Rxb6 a5 28. Ne4 Be7 29. Rc1 Na7 30. Rxc8+ Nxc8 31. Rb8 Rf8 32. Rb5 Bb4 33. Rg5 Rf4 34. Re5 Nd6 35. Nxd6 Bxd6 36. Rxa5 Rxf2 37. Kg1 g3 38. Rb5 Bf4 39. Rb3 Bc7 40. Rb7 Be5 41. Rb4 Bxb2 42. a5 Bc3 43. Ra4 Re2 44. Rf4 Re1+ 45. Rf1 Bd4+ 0-1
+[Event "casual classical game"]
+[Site "https://lichess.org/uljsDUv7"]
+[Date "2024.10.19"]
+[White "LeelaMultiPoss"]
+[Black "BitByByte"]
+[Result "1-0"]
+[GameId "uljsDUv7"]
+[UTCDate "2024.10.19"]
+[UTCTime "01:50:27"]
+[WhiteElo "3014"]
+[BlackElo "2739"]
+[WhiteTitle "BOT"]
+[BlackTitle "BOT"]
+[Variant "Standard"]
+[TimeControl "7200+60"]
+[ECO "B01"]
+[Opening "Scandinavian Defense: Classical Variation"]
+[Termination "Normal"]
+
+1. e4 d5 2. exd5 Qxd5 3. Nc3 Qa5 4. d4 Nf6 5. Nf3 Bf5 6. Ne5 Be6 7. Bd2 c6 8. Bd3 Nbd7 9. Qe2 Qb6 10. O-O-O Qxd4 11. Nxd7 Qxd7 12. h4 Qc7 13. h5 Rg8 14. Kb1 g6 15. h6 O-O-O 16. g3 Rd7 17. a3 Qd8 18. Bg5 Qa5 19. Bc1 Qd8 20. Bg5 Qa5 21. Bc1 Qd8 22. Rhe1 Qc7 23. Bf4 Qa5 24. Bc1 Qc7 25. Bd2 Qa5 26. f3 Qd8 27. Be3 Qa5 28. g4 Nd5 29. Nxd5 Qxd5 30. c4 Qa5 31. Bc2 Qc7 32. Bg5 a5 33. Ba4 Rd6 34. Qe3 Rxd1+ 35. Rxd1 Bxc4 36. Bf4 Bxh6 37. Bxh6 Rd8 38. Rc1 Rd3 39. Qe4 b5 40. Bc2 Qd7 41. Ka1 f5 42. gxf5 gxf5 43. Qe5 Qd6 44. Qh8+ Qd8 45. Qxd8+ Rxd8 46. Bxf5+ Kb7 47. Be4 Bd5 48. Bxd5 Rxd5 49. Re1 e5 50. Kb1 c5 51. Bg7 h5 52. Kc2 b4 53. Bxe5 h4 54. f4 Rd7 55. Rh1 Rh7 56. Kd3 Kc6 57. Ke4 h3 58. f5 Rh4+ 59. Bf4 Kd7 60. Kf3 c4 61. axb4 axb4 62. Kg3 Rh7 63. Rxh3 Rg7+ 64. Kf3 Re7 65. Rh8 c3 66. bxc3 bxc3 67. Rh1 Kc6 68. Rc1 Kd5 69. Rxc3 Rg7 70. Rd3+ Kc4 71. Ke4 Ra7 72. f6 Kb5 73. Kd5 Rf7 74. Be5 Rh7 75. Rc3 Kb6 76. Rb3+ Ka5 77. Bd6 Ka4 78. Rf3 Rb7 79. Ra3+ Kb5 80. Rb3+ Ka6 81. Rxb7 Kxb7 82. f7 Ka6 83. Kc6 Ka5 84. f8=Q Ka4 85. Qb8 Ka5 86. Qb5# 1-0
 

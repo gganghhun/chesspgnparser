@@ -9,47 +9,63 @@
 #include <algorithm>
 #include <unordered_map>
 #include <array>
+#include <limits>
 using namespace chess;
 
+int fast_convert_view_to_int(std::string_view sv) {
+    int value;
+    
+    // ⭐️ sv가 참조하는 데이터의 시작 주소와 끝 주소를 전달
+    auto [ptr, ec] = std::from_chars(sv.data(), 
+                                      sv.data() + sv.size(), 
+                                      value);
+	std::cout << value << std::endl; 
+	return value;
+    // ec(error code)를 확인하여 변환 성공 여부 판단
+    // if (ec == std::errc{}) {
+    //     std::cout << "빠르게 변환된 값: " << value << std::endl;
+    // } else {
+    //     std::cerr << "변환 실패 (std::from_chars)" << std::endl;
+    // }
+}
 const std::unordered_map<std::string_view, int> pgn_resultpoints = {
 	{"1-0", 1},
 	{"1/2-1/2", 0},
 	{"0-1", -1}
 };
-
+constexpr uint16_t EMPTY_SLOT = std::numeric_limits<uint16_t>::max();
 constexpr int MAX_ACTIVE_FEATURES = 64; // 한 포지션 당 최대 활성 피쳐 수 (넉넉하게 설정)
+const size_t BUFFER_SIZE = 64;//16384;
 // 훈련 데이터 샘플 하나를 나타내는 구조체
 struct TrainingEntry {
-    // 게임 결과 (승리: 1, 무: 0, 패: -1)
-    std::int8_t result;
+    // 가장 큰 멤버를 맨 위로
+    std::uint16_t active_features[MAX_ACTIVE_FEATURES]; // 128 바이트
 
-    // 패딩(padding) 바이트. 구조체 크기를 특정 배수(e.g., 4바이트)로 맞추기 위함
-    // std::int8_t padding;
+    std::int8_t result; // 1 바이트
+    std::int8_t count = 0;  // 1 바이트
 
-    // 활성화된 피쳐 인덱스들
-    // 사용하지 않는 공간은 -1과 같은 특수 값으로 채웁니다(sentinel value).
-    std::int32_t active_features[MAX_ACTIVE_FEATURES];
-    // 현재 활성화된 피쳐의 개수
-	std::int8_t count = 0;
-	//생성자
-    // 기능 함수들
-    void add(std::int32_t feature_id);
-    void remove(std::int32_t feature_id);
+    // 수동 패딩: 총 크기를 132바이트 (4의 배수)로 맞추기 위함
+    std::int8_t padding[2]; // 2 바이트
+    void add(std::uint16_t feature_id);
+    void remove(std::uint16_t feature_id);
 };
-std::int32_t make_featureindex(const Board& board,Square king_square, Square piece_square);
+void save_buffer_to_binary_file(const std::string& filepath, const std::vector<TrainingEntry>& buffer);
+std::uint16_t make_featureindex(const Board& board,Square king_square, Square piece_square);
 void make_feacher(Board board, TrainingEntry& entry);
 void update_feacher(Board& board, TrainingEntry& entry, Move move);
 class MyVisitor : public pgn::Visitor {
 public:
     virtual ~MyVisitor() {}
 	std::vector<TrainingEntry> feacher_vector;
+	
 	Board board = Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 	TrainingEntry startentry;
     void startPgn() {
-		memset(startentry.active_features, -1, sizeof(startentry.active_features));
+		board = Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+		memset(startentry.active_features, EMPTY_SLOT, sizeof(startentry.active_features));
 		make_feacher(board, startentry);
 		std::cout << "start features: ";
-		for(std::int32_t i : startentry.active_features)
+		for(std::uint16_t i : startentry.active_features)
 		{
 			std::cout << i << ",";
 		}
@@ -58,7 +74,15 @@ public:
     }
 
     void header(std::string_view key, std::string_view value) {
-		if (key == "Result")
+		if (key == "WhiteElo"){
+			startentry.count = 0;
+			skipPgn(fast_convert_view_to_int(value) < 2300);
+		}
+		else if (key == "Termination"){
+			startentry.count = 0;
+			skipPgn(value != "Normal");
+		}
+		else if (key == "Result")
 		{
 			std::cout << key << " " << value << std::endl;
 			startentry.result = pgn_resultpoints.at(value);
@@ -78,8 +102,13 @@ public:
 		Move current_move = uci::parseSan(board,move);
 		update_feacher(board, startentry, current_move);
 		feacher_vector.push_back(startentry);
-		std::cout << board << std::endl;
-		for(std::int32_t i : startentry.active_features)
+		if(feacher_vector.size() >= BUFFER_SIZE){
+			
+			save_buffer_to_binary_file("bin/training_data.bin", feacher_vector);
+			feacher_vector.clear();
+		}
+		// std::cout << board << std::endl;
+		for(std::uint16_t i : startentry.active_features)
 		{
 			std::cout << i << ",";
 		}
@@ -91,8 +120,13 @@ public:
 
     void endPgn() {
 		std::cout << "end" << std::endl;
-		for(std::int32_t i : feacher_vector[1].active_features)
+		if(feacher_vector.empty()){
+			return;
+		}
+		std::cout << "assdw";
+		for(std::uint16_t i : feacher_vector[1].active_features)
 		{
+			
 			std::cout << i << ",";
 		}
 		std::cout << std::endl;
@@ -104,8 +138,9 @@ public:
 int main()
 {
 	// std::string pgn_cutted_header = cutting_header("chessfeachermaking/pgnsample.pgn");
-    std::ifstream file_stream("chessfeachermaking/pgnsample.pgn");
+    std::ifstream file_stream("pgnparser/pgnsample.pgn");
 	MyVisitor myvisitor;
+	myvisitor.feacher_vector.reserve(BUFFER_SIZE);
 	pgn::StreamParser parser(file_stream);
 	std::cout << "sssx";
 	auto error = parser.readGames(myvisitor);
@@ -113,15 +148,15 @@ int main()
         std::cerr << "Error parsing PGN: " << error.message() << std::endl;
     }
 	std::cout << "vectorsize: "<< myvisitor.feacher_vector.size() << std::endl;
-	// for (TrainingEntry i :  myvisitor.feacher_vector)
-	// {
+	for (TrainingEntry i :  myvisitor.feacher_vector)
+	{
 	
-	// 	for(std::int32_t j : i.active_features)
-	// 	{
-	// 		std::cout << j << ",";
-	// 	}
-	// 	std::cout << "count:" << static_cast<int>(i.count)<< std::endl;
-	// }	
+		for(std::uint16_t j : i.active_features)
+		{
+			std::cout << j << ",";
+		}
+		std::cout << "count:" << static_cast<int>(i.count)<< std::endl;
+	}	
 	// std::vector<std::uint16_t> feacher_index_v = make_feacher(board);
 	// std::cout << feacher_index_v.size() << std::endl;
 	// for(std::uint16_t i : feacher_index_v)
@@ -130,7 +165,7 @@ int main()
 	// }
 }
 
-std::int32_t make_featureindex(const Board& board,Square king_square, Square piece_square)
+std::uint16_t make_featureindex(const Board& board,Square king_square, Square piece_square)
 {
 	std::cout << "kingindex:" << king_square.index() << std::endl;
 	int piece_type = board.at(piece_square).type();	
@@ -148,11 +183,11 @@ void update_feacher(Board& board, TrainingEntry& entry, Move move)
 	int woffset = 0, boffset = 20480;
 	if(piece_square_before == Wking_square || piece_square_before == Bking_square){
 		board.makeMove(move);
-		memset(entry.active_features, -1, sizeof(entry.active_features));
+		memset(entry.active_features, EMPTY_SLOT, sizeof(entry.active_features));
 		entry.count = 0;
 		make_feacher(board, entry);
 		std::cout << "kingmove:";
-		for(std::int32_t i : entry.active_features)
+		for(std::uint16_t i : entry.active_features)
 		{
 			std::cout << i << ",";
 		}
@@ -186,6 +221,7 @@ void make_feacher(Board board, TrainingEntry& entry)
 		// std::cout << "a"<< offset + (Wking_square.index() * 5 * 64) + (piece_type * 64) + piece_square << ',';
 		if(piece_type != 5){
 			entry.add(offset + (Wking_square.index() * 5 * 64) + (piece_type * 64) + piece_square);
+			entry.add(40960 + Wking_square.index());
 		}
 	}
 	Square Bking_square = board.kingSq(true);
@@ -198,13 +234,14 @@ void make_feacher(Board board, TrainingEntry& entry)
 		// std::cout << offset + (Bking_square.index() * 5 * 64) + (piece_type * 64) + piece_square << ',';
 		if(piece_type != 5){
 			entry.add(offset + (Bking_square.index() * 5 * 64) + (piece_type * 64) + piece_square);
+			entry.add(40960 + Bking_square.index());
 		}
 	}
     // std::cout << std::endl;
 }
 
 
-void TrainingEntry::add(std::int32_t feature_id)
+void TrainingEntry::add(std::uint16_t feature_id)
 {
     // 배열이 꽉 찼는지 확인 (안전장치)
     if (count < MAX_ACTIVE_FEATURES) {
@@ -212,7 +249,7 @@ void TrainingEntry::add(std::int32_t feature_id)
         count++;
     }
 }
-void TrainingEntry::remove(std::int32_t feature_id) {
+void TrainingEntry::remove(std::uint16_t feature_id) {
     // 1. 배열에서 제거할 피쳐를 찾습니다.
 	std::cout << " want remove " << feature_id << std::endl;
     auto it = std::find(active_features, active_features + count, feature_id);
@@ -221,8 +258,31 @@ void TrainingEntry::remove(std::int32_t feature_id) {
 		std::cout << "remove " << feature_id << std::endl;
         // 3. (핵심) 찾은 위치를 "맨 뒤에 있던 활성 피쳐" 값으로 덮어씁니다.
         *it = active_features[count - 1];
-        active_features[count -1] = -1;
+        active_features[count -1] = EMPTY_SLOT;
         // 4. 전체 피쳐 개수를 하나 줄입니다.
         count--;
     }
+}
+void save_buffer_to_binary_file(const std::string& filepath, const std::vector<TrainingEntry>& buffer) {
+    // 1. std::ofstream을 사용하여 파일을 엽니다.
+    //    - std::ios::binary: 텍스트 모드가 아닌 바이너리 모드로 엽니다. (매우 중요!)
+    //    - std::ios::app: 파일의 끝에 데이터를 이어서 씁니다. (append)
+    std::ofstream file(filepath, std::ios::binary | std::ios::app);
+
+    // 파일이 정상적으로 열렸는지 확인
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open file " << filepath << " for writing." << std::endl;
+        return;
+    }
+
+    // 2. file.write() 함수로 버퍼의 모든 데이터를 한 번에 씁니다.
+    file.write(
+        // 2a. reinterpret_cast로 TrainingEntry* 포인터를 const char* 포인터로 변환
+        reinterpret_cast<const char*>(buffer.data()),
+
+        // 2b. 쓸 데이터의 총 바이트(byte) 크기를 계산
+        buffer.size() * sizeof(TrainingEntry)
+    );
+
+    file.close();
 }
