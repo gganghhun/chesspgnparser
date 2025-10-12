@@ -103,7 +103,7 @@ const std::unordered_map<std::string_view, int> pgn_resultpoints = {
 };
 constexpr uint16_t EMPTY_SLOT = std::numeric_limits<uint16_t>::max();
 constexpr int MAX_ACTIVE_FEATURES = 64; // 한 포지션 당 최대 활성 피쳐 수 (넉넉하게 설정)
-const size_t BUFFER_SIZE = 64;//16384;
+const size_t BUFFER_SIZE = 16384;//16384;
 // 훈련 데이터 샘플 하나를 나타내는 구조체
 struct TrainingEntry {
     // 가장 큰 멤버를 맨 위로
@@ -224,9 +224,13 @@ int main()
 	myvisitor.feacher_vector.reserve(BUFFER_SIZE);
 	pgn::StreamParser parser(file_stream2);
 	auto error = parser.readGames(myvisitor);
+	if (myvisitor.feacher_vector.size() > 0) {
+		save_buffer_to_binary_file("bin/training_data.bin", myvisitor.feacher_vector);
+	}
     if (error) {
         std::cerr << "Error parsing PGN: " << error.message() << std::endl;
     }
+
 	std::cout << "vectorsize: "<< myvisitor.feacher_vector.size() << std::endl;
 	for (TrainingEntry i :  myvisitor.feacher_vector)
 	{
