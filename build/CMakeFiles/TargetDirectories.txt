@@ -1,3 +1,0 @@
-/workspaces/chesspgnparser/build/CMakeFiles/chesspgnparser.dir
-/workspaces/chesspgnparser/build/CMakeFiles/edit_cache.dir
-/workspaces/chesspgnparser/build/CMakeFiles/rebuild_cache.dir

@@ -209,7 +209,7 @@ int main()
 {
 	// std::string pgn_cutted_header = cutting_header("chessfeachermaking/pgnsample.pgn");
     // std::ifstream file_stream("pgnsample.pgn");
-	std::string input_path = "pgnsample.pgn.zst";
+	std::string input_path = "/workspaces/chesspgnparser/data/pgnsample.pgn.zst";
 	std::ifstream inputFile(input_path, std::ios::binary);
     if (!inputFile) {
         std::cerr << "Error: Cannot open input file " << input_path << std::endl;
@@ -225,7 +225,7 @@ int main()
 	pgn::StreamParser parser(file_stream2);
 	auto error = parser.readGames(myvisitor);
 	if (myvisitor.feacher_vector.size() > 0) {
-		save_buffer_to_binary_file("bin/training_data.bin", myvisitor.feacher_vector);
+		save_buffer_to_binary_file("/workspaces/chesspgnparser/build/bin/training_data.bin", myvisitor.feacher_vector);
 	}
     if (error) {
         std::cerr << "Error parsing PGN: " << error.message() << std::endl;
