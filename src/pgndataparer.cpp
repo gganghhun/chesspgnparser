@@ -121,10 +121,13 @@ std::uint16_t make_featureindex(const Board& board,Square king_square, Square pi
 void make_feacher(Board board, TrainingEntry& entry);
 void update_feacher(Board& board, TrainingEntry& entry, Move move);
 class MyVisitor : public pgn::Visitor {
+private:
+	std::string output_path;
 public:
     virtual ~MyVisitor() {}
+	MyVisitor(const std::string& output_path)
+		: output_path(output_path) {}
 	std::vector<TrainingEntry> feacher_vector;
-	
 	Board board = Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 	TrainingEntry startentry;
     void startPgn() {
@@ -172,7 +175,7 @@ public:
 		feacher_vector.push_back(startentry);
 		if(feacher_vector.size() >= BUFFER_SIZE){
 			
-			save_buffer_to_binary_file("bin/training_data.bin", feacher_vector);
+			save_buffer_to_binary_file(output_path, feacher_vector);
 			feacher_vector.clear();
 		}
 		// std::cout << board << std::endl;
@@ -217,7 +220,7 @@ int main(int argc, char* argv[])
 
 	// std::string pgn_cutted_header = cutting_header("chessfeachermaking/pgnsample.pgn");
     // std::ifstream file_stream("pgnsample.pgn");
-	std::string input_path = "/workspaces/chesspgnparser/data/pgnsample.pgn.zst";
+	// std::string input_path = "/workspaces/chesspgnparser/data/pgnsample.pgn.zst";
 	std::ifstream inputFile(input_path, std::ios::binary);
     if (!inputFile) {
         std::cerr << "Error: Cannot open input file " << input_path << std::endl;
@@ -228,12 +231,12 @@ int main(int argc, char* argv[])
 
 
 
-	MyVisitor myvisitor;
+	MyVisitor myvisitor(output_path);
 	myvisitor.feacher_vector.reserve(BUFFER_SIZE);
 	pgn::StreamParser parser(file_stream2);
 	auto error = parser.readGames(myvisitor);
 	if (myvisitor.feacher_vector.size() > 0) {
-		save_buffer_to_binary_file("/workspaces/chesspgnparser/build/bin/training_data.bin", myvisitor.feacher_vector);
+		save_buffer_to_binary_file(output_path, myvisitor.feacher_vector);
 	}
     if (error) {
         std::cerr << "Error parsing PGN: " << error.message() << std::endl;
