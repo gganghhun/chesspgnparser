@@ -111,9 +111,6 @@ struct TrainingEntry {
 
     std::int8_t result; // 1 바이트
     std::int8_t count = 0;  // 1 바이트
-
-    // 수동 패딩: 총 크기를 132바이트 (4의 배수)로 맞추기 위함
-    std::int8_t padding[2]; // 2 바이트
     void add(std::uint16_t feature_id);
     void remove(std::uint16_t feature_id);
 };
@@ -132,7 +129,12 @@ public:
 	TrainingEntry startentry;
     void startPgn() {
 		board = Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+		startentry.count = 0;
 		memset(startentry.active_features, EMPTY_SLOT, sizeof(startentry.active_features));
+		for(std::uint16_t i : startentry.active_features)
+		{
+			std::cout << i << ",";
+		}
 		make_feacher(board, startentry);
 		std::cout << "start features: ";
 		for(std::uint16_t i : startentry.active_features)
@@ -145,30 +147,26 @@ public:
 
     void header(std::string_view key, std::string_view value) {
 		if (key == "WhiteElo"){
-			startentry.count = 0;
 			skipPgn(fast_convert_view_to_int(value) < 2300);
 		}
 		else if (key == "Termination"){
-			startentry.count = 0;
 			skipPgn(value != "Normal");
 		}
 		else if (key == "Result")
 		{
-			std::cout << key << " " << value << std::endl;
+			// std::cout << key << " " << value << std::endl;
 			startentry.result = pgn_resultpoints.at(value);
-			std::cout << "result: " << static_cast<int>(startentry.result) << std::endl;
+			// std::cout << "result: " << static_cast<int>(startentry.result) << std::endl;
 		}
-		std::cout << key << " " << value << std::endl;
+	    // std::cout << key << " " << value << std::endl;
         // Called for each header tag (e.g., [Event "F/S Return Match"])
     }
 
     void startMoves() {	
-		std::cout << "ssㄴㄴ";
         // Called before the moves of a game are processed
     }
 
     void move(std::string_view move, std::string_view comment) {
-		std::cout << "ss";
 		Move current_move = uci::parseSan(board,move);
 		update_feacher(board, startentry, current_move);
 		feacher_vector.push_back(startentry);
@@ -178,11 +176,11 @@ public:
 			feacher_vector.clear();
 		}
 		// std::cout << board << std::endl;
-		for(std::uint16_t i : startentry.active_features)
-		{
-			std::cout << i << ",";
-		}
-		std::cout << "count:" << static_cast<int>(startentry.count)<< std::endl;
+		// for(std::uint16_t i : startentry.active_features)
+		// {
+		// 	std::cout << i << ",";
+		// }
+		// std::cout << "count:" << static_cast<int>(startentry.count)<< std::endl;
 		// TrainingEntry aaa = feacher_vector[0];
 		// std::cout << "asdasd" << aaa.active_features[0] << std::endl;
         // Called for each move in the game
@@ -193,20 +191,30 @@ public:
 		if(feacher_vector.empty()){
 			return;
 		}
-		std::cout << "assdw";
-		for(std::uint16_t i : feacher_vector[1].active_features)
-		{
+		// for(std::uint16_t i : feacher_vector[1].active_features)
+		// {
 			
-			std::cout << i << ",";
-		}
-		std::cout << std::endl;
+		// 	std::cout << i << ",";
+		// }
+		// std::cout << std::endl;
         // Called at the end of each PGN game
     }
 };
 
 // std::string cutting_header(std::string filename);
-int main()
+int main(int argc, char* argv[])
 {
+    if (argc != 3) {
+        // std::cerr은 에러 메시지를 출력하는 표준 스트림입니다.
+        std::cerr << "사용법: " << argv[0] << " <입력_파일_경로> <출력_파일_경로>" << std::endl;
+        return 1; // 에러가 발생했음을 알리고 종료
+    }
+    std::string input_path = argv[1];
+    std::string output_path = argv[2];
+
+    std::cout << "입력 파일: " << input_path << std::endl;
+    std::cout << "출력 파일: " << output_path << std::endl;
+
 	// std::string pgn_cutted_header = cutting_header("chessfeachermaking/pgnsample.pgn");
     // std::ifstream file_stream("pgnsample.pgn");
 	std::string input_path = "/workspaces/chesspgnparser/data/pgnsample.pgn.zst";
@@ -240,18 +248,17 @@ int main()
 			std::cout << j << ",";
 		}
 		std::cout << "count:" << static_cast<int>(i.count)<< std::endl;
-	}	
+	}
 	// std::vector<std::uint16_t> feacher_index_v = make_feacher(board);
 	// std::cout << feacher_index_v.size() << std::endl;
 	// for(std::uint16_t i : feacher_index_v)
 	// {
 	// 	std::cout << i << std::endl;
-	// }
+	
 }
 
 std::uint16_t make_featureindex(const Board& board,Square king_square, Square piece_square)
 {
-	std::cout << "kingindex:" << king_square.index() << std::endl;
 	int piece_type = board.at(piece_square).type();	
 	
 	return (king_square.index() * 5 * 64) + (piece_type * 64) + piece_square.index();
@@ -265,17 +272,18 @@ void update_feacher(Board& board, TrainingEntry& entry, Move move)
 	Square piece_square_before = Square(ucimove.substr(0,2));
 	Square piece_square_after = Square(ucimove.substr(2,2));
 	int woffset = 0, boffset = 20480;
+
 	if(piece_square_before == Wking_square || piece_square_before == Bking_square){
 		board.makeMove(move);
 		memset(entry.active_features, EMPTY_SLOT, sizeof(entry.active_features));
 		entry.count = 0;
 		make_feacher(board, entry);
-		std::cout << "kingmove:";
-		for(std::uint16_t i : entry.active_features)
-		{
-			std::cout << i << ",";
-		}
-		std::cout << std::endl;
+		// std::cout << "kingmove:";
+		// for(std::uint16_t i : entry.active_features)
+		// {
+		// 	std::cout << i << ",";
+		// }
+		// std::cout << std::endl;
 		return;
 	}
 	if(board.at(piece_square_before).color()){
@@ -287,6 +295,7 @@ void update_feacher(Board& board, TrainingEntry& entry, Move move)
 	else {
 		entry.remove(boffset + make_featureindex(board, Bking_square, piece_square_before));
 		entry.remove(woffset + make_featureindex(board, Wking_square, piece_square_after));
+
 		board.makeMove(move);
 		entry.add(boffset + make_featureindex(board, Bking_square, piece_square_after));
 	}
@@ -294,7 +303,6 @@ void update_feacher(Board& board, TrainingEntry& entry, Move move)
 
 void make_feacher(Board board, TrainingEntry& entry)
 {
-	
 	Bitboard  bitboard = board.them(false);
 	Square Wking_square = board.kingSq(false);
 	int offset = 0;
@@ -305,6 +313,8 @@ void make_feacher(Board board, TrainingEntry& entry)
 		// std::cout << "a"<< offset + (Wking_square.index() * 5 * 64) + (piece_type * 64) + piece_square << ',';
 		if(piece_type != 5){
 			entry.add(offset + (Wking_square.index() * 5 * 64) + (piece_type * 64) + piece_square);
+		}
+		else{
 			entry.add(40960 + Wking_square.index());
 		}
 	}
@@ -318,6 +328,8 @@ void make_feacher(Board board, TrainingEntry& entry)
 		// std::cout << offset + (Bking_square.index() * 5 * 64) + (piece_type * 64) + piece_square << ',';
 		if(piece_type != 5){
 			entry.add(offset + (Bking_square.index() * 5 * 64) + (piece_type * 64) + piece_square);
+		}
+		else{
 			entry.add(40960 + Bking_square.index());
 		}
 	}
@@ -335,11 +347,11 @@ void TrainingEntry::add(std::uint16_t feature_id)
 }
 void TrainingEntry::remove(std::uint16_t feature_id) {
     // 1. 배열에서 제거할 피쳐를 찾습니다.
-	std::cout << " want remove " << feature_id << std::endl;
+	// std::cout << " want remove " << feature_id << std::endl;
     auto it = std::find(active_features, active_features + count, feature_id);
     // 2. 피쳐를 찾았다면
     if (it != active_features + count) {
-		std::cout << "remove " << feature_id << std::endl;
+		// std::cout << "remove " << feature_id << std::endl;
         // 3. (핵심) 찾은 위치를 "맨 뒤에 있던 활성 피쳐" 값으로 덮어씁니다.
         *it = active_features[count - 1];
         active_features[count -1] = EMPTY_SLOT;
