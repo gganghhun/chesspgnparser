@@ -1,5 +1,6 @@
 {
     "name": "C++ Dev Environment",
+	"image": "mcr.microsoft.com/devcontainers/base:alpine",
     "postCreateCommand": "sudo apk update && sudo apk add git-lfs",
     "hostRequirements": {
     "cpus": 4,
