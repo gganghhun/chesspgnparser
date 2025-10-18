@@ -214,7 +214,6 @@ int main(int argc, char* argv[])
     }
     std::string input_path = argv[1];
     std::string output_path = argv[2];
-
     std::cout << "입력 파일: " << input_path << std::endl;
     std::cout << "출력 파일: " << output_path << std::endl;
 
