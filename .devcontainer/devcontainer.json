@@ -1,4 +1,5 @@
 {
+    "name": "C++ Dev Environment",
     "hostRequirements": {
     "cpus": 4,
     "memory": "8gb",

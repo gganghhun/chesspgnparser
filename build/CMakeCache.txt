@@ -238,9 +238,6 @@ Z_VCPKG_CL:FILEPATH=Z_VCPKG_CL-NOTFOUND
 // triplet
 _VCPKG_INSTALLED_DIR:PATH=/workspaces/chesspgnparser/vcpkg/installed
 
-//The directory containing a CMake configuration file for google-cloud-cpp.
-google-cloud-cpp_DIR:PATH=google-cloud-cpp_DIR-NOTFOUND
-
 //Value Computed by CMake
 mypgnparser_BINARY_DIR:STATIC=/workspaces/chesspgnparser/build
 
