@@ -1,5 +1,6 @@
 {
     "name": "C++ Dev Environment",
+    "postCreateCommand": "sudo apk update && sudo apk add git-lfs",
     "hostRequirements": {
     "cpus": 4,
     "memory": "8gb",
