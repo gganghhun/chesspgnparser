@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/pgnparser.dir/src/pgndataparer.cpp.o -o pgnparser  -lzstd 

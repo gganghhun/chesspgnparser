@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.19)
+project(mypgnparser CXX)
+add_executable(pgnparser ${PROJECT_SOURCE_DIR}/src/pgndataparer.cpp)
+find_package(zstd CONFIG REQUIRED)
+target_include_directories(pgnparser PRIVATE ${PROJECT_SOURCE_DIR}/chess-library/include)
+target_link_libraries(pgnparser PRIVATE zstd)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
