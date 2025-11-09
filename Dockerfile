@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y libzstd1 && \
 WORKDIR /app
 
 # 빌드된 C++ 실행 파일 복사
-COPY --from=builder /app/build/bin/chesspgnparser .
+COPY --from=builder /app/build/bin/pgnparser .
 
 # ========================= 핵심 변경점 =========================
 # 컨테이너 시작 시 실행될 스크립트 복사 및 실행 권한 부여
