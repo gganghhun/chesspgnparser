@@ -31,7 +31,7 @@ echo "다운로드 완료: $LOCAL_INPUT_PATH"
 
 # 2. C++ 프로그램 실행 (로컬 경로 사용)
 echo "C++ 프로그램 실행 시작..."
-./chesspgnparser "$LOCAL_INPUT_PATH" "$LOCAL_OUTPUT_PATH"
+./pgnparser "$LOCAL_INPUT_PATH" "$LOCAL_OUTPUT_PATH"
 EXIT_CODE=$? # C++ 프로그램의 종료 코드 저장
 if [ $EXIT_CODE -ne 0 ]; then
     echo "오류: C++ 프로그램 실행 실패 (종료 코드: $EXIT_CODE)"
