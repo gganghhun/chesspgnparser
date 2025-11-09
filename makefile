@@ -4,7 +4,7 @@ CXXFLAGS = -std=c++17 -Wall -I./chess-library/include
 PKGS = libzstd
 CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
 CXXCFLAGS += $(shell pkg-config --cflags $(PKGS))
-LDFLAGS = $(shell pkg-config --libs $(PKGS))
+LDFLAGS = $(CXXFLAGS) $(shell pkg-config --libs $(PKGS))
 SOURCES = src/pgndataparer.cpp 
 EXECUTABLE = pgnparser
 TARGET = $(BIN_DIR)/$(EXECUTABLE)
