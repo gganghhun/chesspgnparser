@@ -67,6 +67,17 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp",
-        "list": "cpp"
+        "list": "cpp",
+        "any": "cpp",
+        "cfenv": "cpp",
+        "complex": "cpp",
+        "forward_list": "cpp",
+        "regex": "cpp",
+        "future": "cpp",
+        "ranges": "cpp",
+        "scoped_allocator": "cpp",
+        "typeindex": "cpp",
+        "valarray": "cpp",
+        "*.inc": "cpp"
     }
 }

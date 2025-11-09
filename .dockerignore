@@ -1,0 +1,22 @@
+# 빌드 결과물 제외
+build/
+bin/
+
+
+
+# VS Code 설정 제외
+.vscode/
+
+# vcpkg 폴더 제외 (Dockerfile에서 새로 설치하므로)
+vcpkg/
+
+# PGN 데이터 파일 제외 (실행 시 외부에서 마운트)
+data/
+
+# 테스트 코드 제외 (빌드에 필요 없다면)
+test/
+data/
+
+# 기타 불필요한 파일들
+*.log
+*.tmp
