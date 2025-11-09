@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 ARG GIT_REPO_URL=https://github.com/gganghhun/chesspgnparser.git
 RUN git clone --recursive ${GIT_REPO_URL} .
-RUN make
+RUN make all
 # =================================================================
 # 2단계: 최종 실행 환경 (Final Image) - Google Cloud SDK 설치 추가
 # =================================================================
