@@ -297,7 +297,6 @@ void save_buffer_to_binary_file(const std::string& filepath, const std::vector<T
     //    - std::ios::binary: 텍스트 모드가 아닌 바이너리 모드로 엽니다. (매우 중요!)
     //    - std::ios::app: 파일의 끝에 데이터를 이어서 씁니다. (append)
     std::ofstream file(filepath, std::ios::binary | std::ios::app);
-
     // 파일이 정상적으로 열렸는지 확인
     if (!file.is_open()) {
         std::cerr << "Error: Could not open file " << filepath << " for writing." << std::endl;
@@ -312,7 +311,7 @@ void save_buffer_to_binary_file(const std::string& filepath, const std::vector<T
         // 2b. 쓸 데이터의 총 바이트(byte) 크기를 계산
         buffer.size() * sizeof(TrainingEntry)
     );
-
+	std::cout << "z";
     file.close();
 }
 int fast_convert_view_to_int(std::string_view sv) {
