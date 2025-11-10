@@ -20,23 +20,23 @@ const std::unordered_map<std::string_view, int> pgn_resultpoints = {
 	{"1/2-1/2", 0},
 	{"0-1", -1}
 };
-constexpr uint16_t EMPTY_SLOT = std::numeric_limits<uint16_t>::max();
-constexpr int MAX_ACTIVE_FEATURES = 64; // 한 포지션 당 최대 활성 피쳐 수 (넉넉하게 설정)
+constexpr int32_t EMPTY_SLOT = -1; // 비활성화 피쳐값
+constexpr int MAX_ACTIVE_FEATURES = 128; // 한 포지션 당 최대 활성 피쳐 수 (넉넉하게 설정)
 const size_t BUFFER_SIZE = 16384;//16384;
 // 훈련 데이터 샘플 하나를 나타내는 구조체
 struct TrainingEntry {
     // 가장 큰 멤버를 맨 위로
-    std::uint16_t active_features[MAX_ACTIVE_FEATURES]; // 128 바이트
-
+    std::int32_t active_features[MAX_ACTIVE_FEATURES]; // 512 바이트
     std::int8_t result; // 1 바이트
     std::int8_t count = 0;  // 1 바이트
-    void add(std::uint16_t feature_id);
-    void remove(std::uint16_t feature_id);
+	std::int16_t padding; //2  바이트
+    void add(std::int32_t feature_id);
+    void remove(std::int32_t feature_id);
 };
 
 int fast_convert_view_to_int(std::string_view sv);
 void save_buffer_to_binary_file(const std::string& filepath, const std::vector<TrainingEntry>& buffer);
-std::uint16_t make_featureindex(const Board& board,Square king_square, Square piece_square);
+std::int32_t make_featureindex(const Board& board,Square king_square, Square piece_square);
 void make_feacher(Board board, TrainingEntry& entry);
 void update_feacher(Board& board, TrainingEntry& entry, Move move);
 class MyVisitor : public pgn::Visitor {
@@ -62,7 +62,7 @@ public:
 		// }
 		make_feacher(board, startentry);
 		// std::cout << "start features: ";
-		// for(std::uint16_t i : startentry.active_features)
+		// for(std::uint32_t i : startentry.active_features)
 		// {
 		// 	std::cout << i << ",";
 		// }
@@ -101,18 +101,19 @@ public:
 			move_count = move_count + 1;
 			return;
 		}
+
 		feacher_vector.push_back(startentry);
 		if(feacher_vector.size() >= BUFFER_SIZE){
 			
 			save_buffer_to_binary_file(output_path, feacher_vector);
 			feacher_vector.clear();
 		}
-		// std::cout << board << std::endl;
-		// for(std::uint16_t i : startentry.active_features)
-		// {
-		// 	std::cout << i << ",";
-		// }
-		// std::cout << "count:" << static_cast<int>(startentry.count)<< std::endl;
+		std::cout << board << std::endl;
+		for(std::int32_t i : startentry.active_features)
+		{
+			std::cout << i << ",";
+		}
+		std::cout << "count:" << static_cast<int>(startentry.count)<< std::endl;
 		// TrainingEntry aaa = feacher_vector[0];
 		// std::cout << "asdasd" << aaa.active_features[0] << std::endl;
         // Called for each move in the game
@@ -122,7 +123,7 @@ public:
 		if(feacher_vector.empty()){
 			return;
 		}
-		// for(std::uint16_t i : feacher_vector[1].active_features)
+		// for(std::uint32_t i : feacher_vector[1].active_features)
 		// {
 			
 		// 	std::cout << i << ",";
@@ -188,11 +189,12 @@ int main(int argc, char* argv[])
 	
 }
 
-std::uint16_t make_featureindex(const Board& board,Square king_square, Square piece_square)
+std::int32_t make_featureindex(const Board& board,Square king_square, Square piece_square)
 {
 	int piece_type = board.at(piece_square).type();	
-	
-	return (king_square.index() * 5 * 64) + (piece_type * 64) + piece_square.index();
+	int piece_color = board.at(piece_square).color(); //블랙이 1 화이트가 0
+	// std::cout << "aaz"<< piece_color << piece_type << piece_square << std::endl;
+	return (piece_color * 64 * 5 * 64) + (king_square.index() * 5 * 64) + (piece_type * 64) + piece_square.index();
 }
 
 void update_feacher(Board& board, TrainingEntry& entry, Move move)
@@ -202,7 +204,7 @@ void update_feacher(Board& board, TrainingEntry& entry, Move move)
 	std::string ucimove = uci::moveToUci(move);
 	Square piece_square_before = Square(ucimove.substr(0,2));
 	Square piece_square_after = Square(ucimove.substr(2,2));
-	int woffset = 0, boffset = 20480;
+	int woffset = 0, boffset = 41024;
 
 	if(piece_square_before == Wking_square || piece_square_before == Bking_square){
 		board.makeMove(move);
@@ -210,65 +212,69 @@ void update_feacher(Board& board, TrainingEntry& entry, Move move)
 		entry.count = 0;
 		make_feacher(board, entry);
 		// std::cout << "kingmove:";
-		// for(std::uint16_t i : entry.active_features)
+		// for(std::uint32_t i : entry.active_features)
 		// {
 		// 	std::cout << i << ",";
 		// }
 		// std::cout << std::endl;
 		return;
 	}
-	if(board.at(piece_square_before).color()){
-		entry.remove(woffset + make_featureindex(board, Wking_square, piece_square_before));
-		entry.remove(boffset + make_featureindex(board, Bking_square, piece_square_after));
-		board.makeMove(move);
-		entry.add(woffset + make_featureindex(board, Wking_square, piece_square_after));
-	}
-	else {
-		entry.remove(boffset + make_featureindex(board, Bking_square, piece_square_before));
-		entry.remove(woffset + make_featureindex(board, Wking_square, piece_square_after));
-
-		board.makeMove(move);
-		entry.add(boffset + make_featureindex(board, Bking_square, piece_square_after));
-	}
+	entry.remove(woffset + make_featureindex(board, Wking_square, piece_square_before));
+	entry.remove(boffset + make_featureindex(board, Bking_square, piece_square_before));
+	entry.remove(boffset + make_featureindex(board, Bking_square, piece_square_after));
+	entry.remove(woffset + make_featureindex(board, Wking_square, piece_square_after));
+	board.makeMove(move);
+	entry.add(woffset + make_featureindex(board, Wking_square, piece_square_after));
+	entry.add(boffset + make_featureindex(board, Bking_square, piece_square_after));
+	// std::cout << "aa"<< make_featureindex(board, Wking_square, piece_square_after) << std::endl;
+	
 }
 
 void make_feacher(Board board, TrainingEntry& entry)
 {
-	Bitboard  bitboard = board.them(false);
+	Bitboard  bitboard = board.all();
 	Square Wking_square = board.kingSq(false);
-	int offset = 0;
+	Square Bking_square = board.kingSq(true);
 	while(bitboard)
 	{
 		int piece_square = bitboard.pop();
 		int piece_type = board.at(piece_square).type();
+		int piece_color = board.at(piece_square).color(); //블랙이 1 화이트가 0
 		// std::cout << "a"<< offset + (Wking_square.index() * 5 * 64) + (piece_type * 64) + piece_square << ',';
 		if(piece_type != 5){
-			entry.add(offset + (Wking_square.index() * 5 * 64) + (piece_type * 64) + piece_square);
+			entry.add((piece_color * 64 * 5 * 64) + (Wking_square.index() * 5 * 64) + (piece_type * 64) + piece_square);
+			// 킹이화이트
+			entry.add(41024 + (piece_color * 64 * 5 * 64) + (Bking_square.index() * 5 * 64) + (piece_type * 64) + piece_square);
+			// 킹이 블랙
+		}
+		else if(piece_color){
+			entry.add(81984 + Bking_square.index());
 		}
 		else{
 			entry.add(40960 + Wking_square.index());
 		}
 	}
-	Square Bking_square = board.kingSq(true);
-	bitboard = board.them(true);
-	offset = 20480;
-	while(bitboard)
-	{
-		int piece_square = bitboard.pop();
-		int piece_type = board.at(piece_square).type();
-		// std::cout << offset + (Bking_square.index() * 5 * 64) + (piece_type * 64) + piece_square << ',';
-		if(piece_type != 5){
-			entry.add(offset + (Bking_square.index() * 5 * 64) + (piece_type * 64) + piece_square);
-		}
-		else{
-			entry.add(40960 + Bking_square.index());
-		}
-	}
+	// Square Bking_square = board.kingSq(true);
+	// bitboard = board.them(true);
+	// offset = 41024;
+	// while(bitboard)
+	// {
+	// 	int piece_square = bitboard.pop();
+	// 	int piece_type = board.at(piece_square).type();
+	// 	int piece_color = board.at(piece_square).color(); //블랙이 1 화이트가 0
+	// 	// std::cout << offset + (Bking_square.index() * 5 * 64) + (piece_type * 64) + piece_square << ',';
+	// 	if(piece_type != 5){
+	// 		entry.add(offset + (piece_color * 64 * 5 * 64) + (Bking_square.index() * 5 * 64) + (piece_type * 64) + piece_square);
+	// 	}
+	// 	else{
+	// 		entry.add(81984 + Bking_square.index());
+	// 	}
+	// }
     // std::cout << std::endl;
 }
 
 
-void TrainingEntry::add(std::uint16_t feature_id)
+void TrainingEntry::add(std::int32_t feature_id)
 {
     // 배열이 꽉 찼는지 확인 (안전장치)
     if (count < MAX_ACTIVE_FEATURES) {
@@ -276,7 +282,7 @@ void TrainingEntry::add(std::uint16_t feature_id)
         count++;
     }
 }
-void TrainingEntry::remove(std::uint16_t feature_id) {
+void TrainingEntry::remove(std::int32_t feature_id) {
     // 1. 배열에서 제거할 피쳐를 찾습니다.
 	// std::cout << " want remove " << feature_id << std::endl;
     auto it = std::find(active_features, active_features + count, feature_id);
