@@ -108,12 +108,12 @@ public:
 			save_buffer_to_binary_file(output_path, feacher_vector);
 			feacher_vector.clear();
 		}
-		std::cout << board << std::endl;
-		for(std::int32_t i : startentry.active_features)
-		{
-			std::cout << i << ",";
-		}
-		std::cout << "count:" << static_cast<int>(startentry.count)<< std::endl;
+		// std::cout << board << std::endl;
+		// for(std::int32_t i : startentry.active_features)
+		// {
+		// 	std::cout << i << ",";
+		// }
+		// std::cout << "count:" << static_cast<int>(startentry.count)<< std::endl;
 		// TrainingEntry aaa = feacher_vector[0];
 		// std::cout << "asdasd" << aaa.active_features[0] << std::endl;
         // Called for each move in the game
@@ -136,6 +136,7 @@ public:
 // std::string cutting_header(std::string filename);
 int main(int argc, char* argv[])
 {
+	std::cout << "version: v6" << std::endl;
     if (argc != 3) {
         // std::cerr은 에러 메시지를 출력하는 표준 스트림입니다.
         std::cerr << "사용법: " << argv[0] << " <입력_파일_경로> <출력_파일_경로>" << std::endl;
