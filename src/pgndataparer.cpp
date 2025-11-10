@@ -73,6 +73,7 @@ public:
     void header(std::string_view key, std::string_view value) {
 		if (key == "WhiteElo"){
 			skipPgn(fast_convert_view_to_int(value) < 2300);
+			// std::cout << std::boolalpha << (fast_convert_view_to_int(value) < 2300) << ",";
 		}
 		// else if (key == "BlackElo"){
 		// 	skipPgn(fast_convert_view_to_int(value) < 2300);
@@ -82,7 +83,6 @@ public:
 		}
 		else if (key == "Result")
 		{
-			// std::cout << key << " " << value << std::endl;
 			startentry.result = pgn_resultpoints.at(value);
 			// std::cout << "result: " << static_cast<int>(startentry.result) << std::endl;
 		}
@@ -91,7 +91,6 @@ public:
     }
 
     void startMoves() {	
-		
         // Called before the moves of a game are processed
     }
 
@@ -99,7 +98,7 @@ public:
 		Move current_move = uci::parseSan(board,move);
 		update_feacher(board, startentry, current_move);
 		if(move_count <= 10){
-			// std::cout << move_count << std::endl;
+			move_count = move_count + 1;
 			return;
 		}
 		feacher_vector.push_back(startentry);
@@ -120,7 +119,6 @@ public:
     }
 
     void endPgn() {
-		// std::cout << "end" << std::endl;
 		if(feacher_vector.empty()){
 			return;
 		}
@@ -311,7 +309,6 @@ void save_buffer_to_binary_file(const std::string& filepath, const std::vector<T
         // 2b. 쓸 데이터의 총 바이트(byte) 크기를 계산
         buffer.size() * sizeof(TrainingEntry)
     );
-	std::cout << "z";
     file.close();
 }
 int fast_convert_view_to_int(std::string_view sv) {
