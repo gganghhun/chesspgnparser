@@ -21,12 +21,12 @@ const std::unordered_map<std::string_view, int> pgn_resultpoints = {
 	{"0-1", -1}
 };
 constexpr int32_t EMPTY_SLOT = -1; // 비활성화 피쳐값
-constexpr int MAX_ACTIVE_FEATURES = 128; // 한 포지션 당 최대 활성 피쳐 수 (넉넉하게 설정)
+constexpr int MAX_ACTIVE_FEATURES = 64; // 한 포지션 당 최대 활성 피쳐 수 (넉넉하게 설정)
 const size_t BUFFER_SIZE = 16384;//16384;
 // 훈련 데이터 샘플 하나를 나타내는 구조체
 struct TrainingEntry {
     // 가장 큰 멤버를 맨 위로
-    std::int32_t active_features[MAX_ACTIVE_FEATURES]; // 512 바이트
+    std::int32_t active_features[MAX_ACTIVE_FEATURES]; // 256 바이트
     std::int8_t result; // 1 바이트
     std::int8_t count = 0;  // 1 바이트
 	std::int16_t padding; //2  바이트
@@ -136,7 +136,7 @@ public:
 // std::string cutting_header(std::string filename);
 int main(int argc, char* argv[])
 {
-	std::cout << "version: v6" << std::endl;
+	std::cout << "version: v8" << std::endl;
     if (argc != 3) {
         // std::cerr은 에러 메시지를 출력하는 표준 스트림입니다.
         std::cerr << "사용법: " << argv[0] << " <입력_파일_경로> <출력_파일_경로>" << std::endl;
